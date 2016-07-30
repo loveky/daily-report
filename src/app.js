@@ -5,6 +5,7 @@ import 'bootstrap';
 import dataService from './dataService';
 import currentDate from './currentDate';
 import Clipboard from 'clipboard';
+import Promise from 'bluebird';
 
 let todayRelease = [];
 let todayTask = [];
@@ -61,6 +62,7 @@ $('.add-task').on('click', () => {
 // 提交任务
 $('.submit-task').on('click', function () {
     const $this = $(this);
+    const submittingTasks = [];
 
     $('.task-input').each(function () {
         const $task = $(this);
@@ -69,19 +71,29 @@ $('.submit-task').on('click', function () {
         const taskRelease = $task.find('.release-task').is(':checked');
         
         if (taskContent.length > 0) {
-            dataService.ref(refPathOfToday('tasks')).push({taskContent, taskProgress, taskRelease})
+            submittingTasks.push(dataService.ref(refPathOfToday('tasks')).push({taskContent, taskProgress, taskRelease}));
         }
     });
+
+    Promise.all(submittingTasks).then(hideEditContainer);
 });
 
+// 发送会议纪要：复制内容到剪切板，弹tooltip
 const clipboard = new Clipboard('.send-report');
 $('.send-report').tooltip({
     container: 'body',
     html: true,
     trigger: 'manual',
-    title: '日报内容已复制至剪切板，请<a href="mailto:fe-rd1@jd.com?subject=前端研发一组' + currentDate + '早会记要">打开邮件客户端</a>粘贴后发送～'
+    title: '日报内容已复制至剪切板，请<a href="mailto:?subject=前端研发一组' + currentDate + '早会记要">打开邮件客户端</a>粘贴后发送～'
 })
 clipboard.on('success', () => {
     $('.send-report').tooltip('show');
     setTimeout(() => {$('.send-report').tooltip('hide')}, 3000)
 });
+
+// 收起右侧区域，展示区域居中
+function hideEditContainer() {
+    $('#edit-container').slideUp(500, () => {
+        $('<div class="col-md-3"></div>').insertBefore('#report-container');
+    });
+}

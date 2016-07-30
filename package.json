@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bluebird": "^3.4.1",
     "bootstrap": "^3.3.7",
     "clipboard": "^1.5.12",
     "firebase": "^3.2.1",
