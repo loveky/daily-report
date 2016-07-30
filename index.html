@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>研发一组 日报系统</title>
+
+        <link rel="stylesheet" href="//cdn.bootcss.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    </head>
+    <body>
+        <nav class="navbar navbar-inverse navbar-fixed-top">
+            <div class="container">
+                <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">研发一组 日报系统</a>
+                </div>
+                <div id="navbar" class="navbar-collapse collapse">
+                </div><!--/.navbar-collapse -->
+            </div>
+        </nav>
+        <div class="main-container container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h3>前端研发一组<span class="today"></span>早会记要</h3>
+                    <div class="today-release">
+                        <h4>今日上线</h4>
+                    </div>
+                    <div class="today-task">
+                        <h4>今日主要工作</h4>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="task-input form-inline">
+                        <div class="form-group">
+                            <input type="text" class="task-content form-control"  placeholder="工作内容">
+                        </div>
+                        <div class="task-progress form-group">
+                            <div class="input-group">
+                                <input type="text" class="form-control"  placeholder="进度">
+                                <div class="input-group-addon">%</div>
+                            </div>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                            <input class="release-task" type="checkbox">上线
+                            </label>
+                        </div>
+                    </div>
+                    <div class="task-input form-inline">
+                        <div class="form-group">
+                            <input type="text" class="task-content form-control"  placeholder="工作内容">
+                        </div>
+                        <div class="task-progress form-group">
+                            <div class="input-group">
+                                <input type="text" class="form-control"  placeholder="进度">
+                                <div class="input-group-addon">%</div>
+                            </div>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                            <input class="release-task" type="checkbox">上线
+                            </label>
+                        </div>
+                    </div>
+                    <div class="task-input form-inline">
+                        <div class="form-group">
+                            <input type="text" class="task-content form-control"  placeholder="工作内容">
+                        </div>
+                        <div class="task-progress form-group">
+                            <div class="input-group">
+                                <input type="text" class="form-control"  placeholder="进度">
+                                <div class="input-group-addon">%</div>
+                            </div>
+                        </div>
+                        <div class="checkbox">
+                            <label>
+                            <input class="release-task" type="checkbox">上线
+                            </label>
+                        </div>
+                    </div>
+                    <div class="task-operation form-inline">
+                        <button type="button" class="add-task btn btn-default">添加任务</button>
+                        <button type="button" class="submit-task btn btn-success">提交</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script id="new-task-template" type="text/template">
+            <div class="task-input form-inline">
+                <div class="form-group">
+                    <input type="text" class="task-content form-control"  placeholder="工作内容">
+                </div>
+                <div class="task-progress form-group">
+                    <div class="input-group">
+                        <input type="text" class="form-control"  placeholder="进度">
+                        <div class="input-group-addon">%</div>
+                    </div>
+                </div>
+                <div class="checkbox">
+                    <label>
+                    <input class="release-task" type="checkbox">上线
+                    </label>
+                </div>
+            </div>
+        </script>
+        <script src="./dist/app.bundle.js"></script>
+    </body>
+</html>
