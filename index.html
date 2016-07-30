@@ -26,7 +26,7 @@
         </nav>
         <div class="main-container container">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-6" id="report-container">
                     <h3>前端研发一组<span class="today"></span>早会记要</h3>
                     <div class="today-release">
                         <h4>今日上线</h4>
@@ -34,6 +34,11 @@
                     <div class="today-task">
                         <h4>今日主要工作</h4>
                     </div>
+                    <p class="report-operation">
+                        <button data-clipboard-target="#report-container" type="button" class="send-report btn btn-info">
+                            <span class="glyphicon glyphicon-envelope"></span> 发送会议纪要
+                        </button>
+                    </p>
                 </div>
                 <div class="col-md-6">
                     <div class="task-input form-inline">
