@@ -2,8 +2,7 @@ module.exports = {
     entry: './src/app.js',
     output: {
         path: './dist',
-        filename: 'app.bundle.js',
-        publicPath: '/dist/'
+        filename: 'app.bundle.js'
     },
     module: {
         loaders: [{
@@ -18,6 +17,10 @@ module.exports = {
         {
             test: /\.scss$/,
             loaders: ["style", "css", "sass"]
+        },
+        {
+            test: /\.html$/,
+            loader: "file-loader?name=[name].[ext]"
         }]
     }
 }
