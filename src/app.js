@@ -31,6 +31,7 @@ dataService.ref(refPathOfToday('tasks')).on('value', (snapshot) => {
 
     for (let key of Object.keys(snapshotData)) {
         task = snapshotData[key];
+        task.key = key;
 
         if (task.taskRelease) {
             todayRelease.push(task)
@@ -41,12 +42,12 @@ dataService.ref(refPathOfToday('tasks')).on('value', (snapshot) => {
     }
 
     for (let release of todayRelease) {
-        $todayRelase.append(`<p class="task">${index++}. ${release.taskContent}</p>`)
+        $todayRelase.append(`<p data-key="${release.key}" class="task">${index++}. ${release.taskContent}<span class="delete">x</span></p>`)
     }
 
     index = 1;
     for (let task of todayTask) {
-        $todayTask.append(`<p class="task">${index++}. ${task.taskContent} ${task.taskProgress > 0 ? task.taskProgress + '%' : ''}</p>`)
+        $todayTask.append(`<p data-key="${task.key}" class="task">${index++}. ${task.taskContent} ${task.taskProgress > 0 ? task.taskProgress + '%' : ''}<span class="delete">x</span></p>`)
     }
 });
 
@@ -58,6 +59,15 @@ dataService.ref(refPathOfToday('repoteres')).on('value', (snapshot) => {
 // 添加任务
 $('.add-task').on('click', () => {
     $($('#new-task-template').html()).insertBefore('.task-operation');
+});
+
+// 删除任务
+$('#report-container').on('click', '.delete', function () {
+    const $task =  $(this).closest('.task');
+
+    dataService.ref(refPathOfToday('tasks') + '/' + $task.data('key')).remove().then(() => {
+        $task.remove();
+    })
 });
 
 // 提交任务
