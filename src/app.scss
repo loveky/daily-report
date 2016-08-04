@@ -4,11 +4,9 @@
 
 .task-input {
     margin-bottom: 10px;
-
     &:first-child {
         margin-top: 20px;
     }
-
     .task-content {
         width: 300px;
     }
@@ -17,7 +15,8 @@
     }
 }
 
-.today-task, .today-release {
+.today-task,
+.today-release {
     h4 {
         margin-top: 25px;
         margin-bottom: 4px;
@@ -27,14 +26,12 @@
         padding-left: 20px;
         font-size: 16px;
         line-height: 18px;
-
         &:hover {
             background-color: #eee;
             .delete {
                 display: inline-block;
             }
         }
-
         .delete {
             float: right;
             margin-right: 10px;
@@ -47,4 +44,10 @@
 .report-operation {
     margin-top: 20px;
     text-align: center;
+}
+
+.modal-body .user {
+    margin-right: 10px;
+    display: inline-block;
+    cursor: pointer;
 }

@@ -1,7 +1,7 @@
 require('./app.scss')
 require('./index.html');
 
-import $ from 'jquery'; 
+import $ from 'jquery';
 import 'bootstrap';
 import dataService from './dataService';
 import currentDate from './currentDate';
@@ -10,6 +10,8 @@ import Promise from 'bluebird';
 
 let todayRelease = [];
 let todayTask = [];
+let currentUser;
+let todayUsers;
 
 $('.today').text(currentDate);
 
@@ -24,7 +26,7 @@ dataService.ref(refPathOfToday('tasks')).on('value', (snapshot) => {
     const $todayRelase = $('.today-release');
     const $todayTask = $('.today-task');
     let task, release, index = 1;
-    const snapshotData = snapshot.val(); 
+    const snapshotData = snapshot.val();
 
     $todayRelase.find('p').remove();
     $todayTask.find('p').remove();
@@ -35,8 +37,7 @@ dataService.ref(refPathOfToday('tasks')).on('value', (snapshot) => {
 
         if (task.taskRelease) {
             todayRelease.push(task)
-        }
-        else {
+        } else {
             todayTask.push(task);
         }
     }
@@ -56,14 +57,24 @@ dataService.ref(refPathOfToday('repoteres')).on('value', (snapshot) => {
 
 });
 
+Promise.all([
+    dataService.ref('users').once('value'),
+    dataService.ref(refPathOfToday('repoteres')).on('value')
+]).then((allUsersSnapshot, repoteresSnapshot) => {
+    const allUsers = getData(allUsersSnapshot.val());
+    const repoteres = getData(repoteresSnapshot.val());
+
+    
+})
+
 // 添加任务
 $('.add-task').on('click', () => {
     $($('#new-task-template').html()).insertBefore('.task-operation');
 });
 
 // 删除任务
-$('#report-container').on('click', '.delete', function () {
-    const $task =  $(this).closest('.task');
+$('#report-container').on('click', '.delete', function() {
+    const $task = $(this).closest('.task');
 
     dataService.ref(refPathOfToday('tasks') + '/' + $task.data('key')).remove().then(() => {
         $task.remove();
@@ -71,18 +82,18 @@ $('#report-container').on('click', '.delete', function () {
 });
 
 // 提交任务
-$('.submit-task').on('click', function () {
+$('.submit-task').on('click', function() {
     const $this = $(this);
     const submittingTasks = [];
 
-    $('.task-input').each(function () {
+    $('.task-input').each(function() {
         const $task = $(this);
         const taskContent = $.trim($task.find('.task-content').val());
         const taskProgress = $task.find('.task-progress input').val();
         const taskRelease = $task.find('.release-task').is(':checked');
-        
+
         if (taskContent.length > 0) {
-            submittingTasks.push(dataService.ref(refPathOfToday('tasks')).push({taskContent, taskProgress, taskRelease}));
+            submittingTasks.push(dataService.ref(refPathOfToday('tasks')).push({ taskContent, taskProgress, taskRelease }));
         }
     });
 
@@ -99,7 +110,7 @@ $('.send-report').tooltip({
 })
 clipboard.on('success', () => {
     $('.send-report').tooltip('show');
-    setTimeout(() => {$('.send-report').tooltip('hide')}, 3000)
+    setTimeout(() => { $('.send-report').tooltip('hide') }, 3000)
 });
 
 // 收起右侧区域，展示区域居中
@@ -107,4 +118,60 @@ function hideEditContainer() {
     $('#edit-container').slideUp(500, () => {
         $('<div class="col-md-3"></div>').insertBefore('#report-container');
     });
+}
+
+// 自动弹出选人弹框
+$('#myModal').modal({
+    show: true,
+    backdrop: 'static',
+    keyboard: false
+});
+
+$('body').on('click', '#viewOnly', () => {
+    $('#myModal').modal('hide');
+    hideEditContainer();
+});
+
+$('body').on('click', '#userSelected', function(e) {
+    e.preventDefault();
+
+    if ($(this).is(':disabled')) {
+        return;
+    }
+
+    currentUser = $('#myModal .label-success').data('id');
+    $('#myModal').modal('hide');
+
+});
+
+// 加载当天活动用户列表
+dataService.ref('users').once('value').then(snapshot => {
+    let key, user;
+    const users = snapshot.val();
+
+    for (key of Object.keys(users)) {
+        user = users[key];
+
+        if (!user.enable) {
+            continue;
+        }
+
+        $('#myModal .modal-body').append(`<span data-id="${user.id}" class="user label label-default">${user.name}</span>`)
+    }
+});
+
+$('body').on('click', '.modal-body .user', function() {
+    $(this).addClass('label-success').siblings().removeClass('label-success').addClass('label-default');
+    $('#userSelected').prop('disabled', false);
+});
+
+function getData(firebaseData = {}) {
+    let key, value;
+    const result = [];
+
+    for (key of Object.keys(firebaseData)) {
+        result.push(firebaseData[key]);
+    }
+
+    return result;
 }
