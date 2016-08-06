@@ -3,42 +3,35 @@ require('./index.html');
 
 import $ from 'jquery';
 import 'bootstrap';
-import dataService from './dataService';
-import currentDate from './currentDate';
 import Clipboard from 'clipboard';
 import Promise from 'bluebird';
+
+import dataService from './dataService';
+import currentDate from './currentDate';
+import * as reporterService from './reporterService';
+import snapshotToArray from './snapshotToArray';
+import refPathOfToday from './refPathOfToday';
+import * as taskService from './taskService';
 
 let todayRelease = [];
 let todayTask = [];
 let currentReporter;
-let allActiveReporters;
+let allActiveReportersCache;
 
 $('.today').text(currentDate);
 
-function refPathOfToday(path) {
-    return 'reports/' + currentDate.replace(/-/g, '') + '/' + path;
-}
-
 // 监听当天任务列表变化
-dataService.ref(refPathOfToday('tasks')).on('value', (snapshot) => {
+taskService.onTodayTaskChange(function(tasks) {
     todayRelease = [];
     todayTask = [];
     const $todayRelase = $('.today-release');
     const $todayTask = $('.today-task');
     let task, release, index = 1;
-    const snapshotData = snapshot.val();
-
-    if (!snapshotData) {
-        return;
-    }
 
     $todayRelase.find('p').remove();
     $todayTask.find('p').remove();
 
-    for (let key of Object.keys(snapshotData)) {
-        task = snapshotData[key];
-        task.key = key;
-
+    for (let task of tasks) {
         if (task.taskRelease) {
             todayRelease.push(task)
         } else {
@@ -47,40 +40,28 @@ dataService.ref(refPathOfToday('tasks')).on('value', (snapshot) => {
     }
 
     for (let release of todayRelease) {
-        $todayRelase.append(`<p data-key="${release.key}" class="task">${index++}. ${release.taskContent}<span class="delete">x</span></p>`)
+        $todayRelase.append(`<p data-key="${release.__id}" class="task">${index++}. ${release.taskContent}<span class="delete">x</span></p>`)
     }
 
     index = 1;
     for (let task of todayTask) {
-        $todayTask.append(`<p data-key="${task.key}" class="task">${index++}. ${task.taskContent} ${task.taskProgress > 0 ? task.taskProgress + '%' : ''}<span class="delete">x</span></p>`)
+        $todayTask.append(`<p data-key="${task.__id}" class="task">${index++}. ${task.taskContent} ${task.taskProgress > 0 ? task.taskProgress + '%' : ''}<span class="delete">x</span></p>`)
     }
 });
 
 // 监听当天已经提交任务的人员列表
-dataService.ref(refPathOfToday('reporteres')).on('value', (snapshot) => {
-
-});
-
 Promise.all([
-    dataService.ref('users').once('value'),
-    dataService.ref(refPathOfToday('reporteres')).once('value')
-]).then(([allreportersSnapshot, reportersSnapshot]) => {
-    allActiveReporters = getData(allreportersSnapshot.val()).filter(reporter => reporter.enable);
-    const reporters = getData(reportersSnapshot.val());
-    const waitingreporters = allActiveReporters.filter(reporter => reporters.indexOf(reporter.id) < 0).map(reporter => reporter.name);
-    if (waitingreporters.length > 0) {
-        $('.waiting-reporters').removeClass('hide').find('span').remove();
-        waitingreporters.forEach(function(reporter) {
-            $('.waiting-reporters').append(`<span class="reporter label label-default">${reporter}</span>`)
-        })
-    } else {
-        $('.waiting-reporters').addClass('hide');
-    }
+    reporterService.getAllActiveReporters(),
+    reporterService.getTodayReporters()
+]).then(([allActiveReporters, reporters]) => {
+    allActiveReportersCache = allActiveReporters;
+    updateWaittingReporters(reporters);
+
+    reporterService.onTodayReporterChange(updateWaittingReporters);
 })
 
-dataService.ref(refPathOfToday('reporteres')).on('value', (reportersSnapshot) => {
-    const reporters = getData(reportersSnapshot.val());
-    const waitingreporters = allActiveReporters.filter(reporter => reporters.indexOf(reporter.id) < 0).map(reporter => reporter.name);
+function updateWaittingReporters(reporters) {
+    const waitingreporters = allActiveReportersCache.filter(reporter => reporters.indexOf(reporter.id) < 0).map(reporter => reporter.name);
     if (waitingreporters.length > 0) {
         $('.waiting-reporters').removeClass('hide').find('span').remove();
         waitingreporters.forEach(function(reporter) {
@@ -89,7 +70,7 @@ dataService.ref(refPathOfToday('reporteres')).on('value', (reportersSnapshot) =>
     } else {
         $('.waiting-reporters').addClass('hide');
     }
-})
+}
 
 // 添加任务
 $('.add-task').on('click', () => {
@@ -117,7 +98,7 @@ $('.submit-task').on('click', function() {
         const taskRelease = $task.find('.release-task').is(':checked');
 
         if (taskContent.length > 0) {
-            submittingTasks.push(dataService.ref(refPathOfToday('tasks')).push({ taskContent, taskProgress, taskRelease }));
+            submittingTasks.push(taskService.saveTask({ taskContent, taskProgress, taskRelease }));
         }
     });
 
@@ -169,22 +150,12 @@ $('body').on('click', '#userSelected', function(e) {
 
     currentReporter = $('#myModal .label-success').data('id');
     $('#myModal').modal('hide');
-
 });
 
 // 加载当天活动用户列表
-dataService.ref('users').once('value').then(snapshot => {
-    let key, user;
-    const users = snapshot.val();
-
-    for (key of Object.keys(users)) {
-        user = users[key];
-
-        if (!user.enable) {
-            continue;
-        }
-
-        $('#myModal .modal-body').append(`<span data-id="${user.id}" class="reporter label label-default">${user.name}</span>`)
+reporterService.getAllActiveReporters().then(allReporters => {
+    for (let reporter of allReporters) {
+        $('#myModal .modal-body').append(`<span data-id="${reporter.id}" class="reporter label label-default">${reporter.name}</span>`)
     }
 });
 
@@ -192,18 +163,3 @@ $('body').on('click', '.modal-body .reporter', function() {
     $(this).addClass('label-success').siblings().removeClass('label-success').addClass('label-default');
     $('#userSelected').prop('disabled', false);
 });
-
-function getData(firebaseData = {}) {
-    let key, value;
-    const result = [];
-
-    if (!firebaseData) {
-        return [];
-    }
-
-    for (key of Object.keys(firebaseData)) {
-        result.push(firebaseData[key]);
-    }
-
-    return result;
-}
