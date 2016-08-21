@@ -8,9 +8,9 @@ import Promise from 'bluebird';
 
 import dataService from './dataService';
 import currentDate from './currentDate';
-import * as reporterService from './reporterService';
 import snapshotToArray from './snapshotToArray';
 import refPathOfToday from './refPathOfToday';
+import * as reporterService from './reporterService';
 import * as taskService from './taskService';
 
 let todayRelease = [];
@@ -40,12 +40,12 @@ taskService.onTodayTaskChange(function(tasks) {
     }
 
     for (let release of todayRelease) {
-        $todayRelase.append(`<p data-key="${release.__id}" class="task">${index++}. ${release.taskContent}<span class="delete">x</span></p>`)
+        $todayRelase.append(`<p data-key="${release.__id}" data-id="${release.reporterID}" class="task">${index++}. ${release.taskContent}<span class="delete">x</span></p>`)
     }
 
     index = 1;
     for (let task of todayTask) {
-        $todayTask.append(`<p data-key="${task.__id}" class="task">${index++}. ${task.taskContent} ${task.taskProgress > 0 ? task.taskProgress + '%' : ''}<span class="delete">x</span></p>`)
+        $todayTask.append(`<p data-key="${task.__id}" data-id="${task.reporterID}" class="task">${index++}. ${task.taskContent} ${task.taskProgress > 0 ? task.taskProgress + '%' : ''}<span class="delete">x</span></p>`)
     }
 });
 
@@ -70,7 +70,40 @@ function updateWaittingReporters(reporters) {
     } else {
         $('.waiting-reporters').addClass('hide');
     }
+
+    if (reporters.length > 0) {
+        var html = '<p>已提交用户：</p>';
+
+        for (let reporterID of reporters) {
+            let reporter = allActiveReportersCache.filter(reporter => reporter.id == reporterID)[0];
+
+            if (!reporter){
+                continue;
+            }
+
+            html += `<span data-id="${reporter.id}" class="reporter label label-success">${reporter.name}</span>`
+        }
+
+        $('.submitted-reporters').html(html);
+    }
 }
+
+// 高亮选中用户的任务
+$('.submitted-reporters').on('click', '.reporter', function () {
+    const $this = $(this);
+    const reporterID = $this.data('id');
+
+    if ($this.hasClass('label-success')) {
+        $this.removeClass('label-success').addClass('label-info').siblings('.reporter').removeClass('label-info').addClass('label-success');
+        $('.task').removeClass('highlight').filter(function () {
+            return $(this).data('id') == reporterID;
+        }).addClass('highlight');
+    }
+    else {
+        $this.removeClass('label-info').addClass('label-success');
+        $('.task').removeClass('highlight');
+    }
+});
 
 // 添加任务
 $('.add-task').on('click', () => {
@@ -86,9 +119,21 @@ $('#report-container').on('click', '.delete', function() {
     })
 });
 
-// 提交任务
-$('.submit-task').on('click', function() {
-    const $this = $(this);
+// 提交任务(点击提交按钮)
+$('.submit-task').on('click', submitTask);
+
+// 提交任务(ctrl+enter)
+$('#edit-container').on('keydown', 'input', function ($event) {
+    if ($event.ctrlKey && $event.keyCode == 13) {
+        submitTask();
+    }
+});
+
+$('.submit-task').tooltip({
+    title: 'Ctrl+Enter可以一键提交哟'
+})
+
+function submitTask() {
     const submittingTasks = [];
 
     $('.task-input').each(function() {
@@ -98,7 +143,7 @@ $('.submit-task').on('click', function() {
         const taskRelease = $task.find('.release-task').is(':checked');
 
         if (taskContent.length > 0) {
-            submittingTasks.push(taskService.saveTask({ taskContent, taskProgress, taskRelease }));
+            submittingTasks.push(taskService.saveTask({ taskContent, taskProgress, taskRelease, reporterID: currentReporter}));
         }
     });
 
@@ -107,7 +152,7 @@ $('.submit-task').on('click', function() {
     allSubmitted.then(() => {
         dataService.ref(refPathOfToday('reporteres')).push(currentReporter);
     })
-});
+}
 
 // 发送会议纪要：复制内容到剪切板，弹tooltip
 const clipboard = new Clipboard('.send-report');
@@ -126,6 +171,7 @@ clipboard.on('success', () => {
 function hideEditContainer() {
     $('#edit-container').slideUp(500, () => {
         $('<div class="col-md-3"></div>').insertBefore('#report-container');
+        $('.submitted-reporters').css('left','+=150')
     });
 }
 

@@ -32,6 +32,9 @@
                 display: inline-block;
             }
         }
+        &.highlight{
+            background-color: #aaa;
+        }
         .delete {
             float: right;
             margin-right: 10px;
@@ -51,4 +54,16 @@
     margin-right: 10px;
     display: inline-block;
     cursor: pointer;
+}
+
+.submitted-reporters {
+    position: fixed;
+    left: 50px;
+    top: 200px;
+
+    .reporter {
+        display: block;
+        margin-top: 5px;
+        cursor: pointer;
+    }
 }
