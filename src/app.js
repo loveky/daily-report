@@ -17,6 +17,7 @@ let todayRelease = [];
 let todayTask = [];
 let currentReporter;
 let allActiveReportersCache;
+let danmuInited = false;
 
 $('.today').text(currentDate);
 
@@ -209,3 +210,19 @@ $('body').on('click', '.modal-body .reporter', function() {
     $(this).addClass('label-success').siblings().removeClass('label-success').addClass('label-default');
     $('#userSelected').prop('disabled', false);
 });
+
+
+let row = 0;
+taskService.onNewTaskAdded((task) => {
+    const color = ['#337ab7', '#ec971f', '#c9302c'][Math.floor(Math.random() * 3)];
+    const left = $(window).width();
+    const top = 60 + row * 30;
+    const $danmu = $(`<div class="danmu">${task.taskContent}</div>`).css({left, top, color}).appendTo('body')
+
+    $danmu.animate({
+        left: -($danmu.width())
+    }, 4000 * (1 + Math.random()), 'linear', () => {$danmu.remove()});
+
+    row++;
+    row = row % 15;
+})

@@ -11,6 +11,12 @@ export function onTodayTaskChange(callback) {
     });
 }
 
+export function onNewTaskAdded (callback) {
+	dataService.ref(refPathOfToday('tasks')).on('child_added', function (data) {
+		callback.call(null, data.val());
+	});
+}
+
 export function saveTask(task) {
     return Promise.try(() => {
         dataService.ref(refPathOfToday('tasks')).push(task);
